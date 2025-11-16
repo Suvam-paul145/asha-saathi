@@ -9,30 +9,47 @@ pipeline {
 
     stages {
 
+        stage('Skip CI Check') {
+            steps {
+                script {
+                    def skip = false
+                    for (changeSet in currentBuild.changeSets) {
+                        for (entry in changeSet.items) {
+                            if (entry.msg.contains('[ci skip]')) {
+                                skip = true
+                                break
+                            }
+                        }
+                        if (skip) break
+                    }
+                    if (skip) {
+                        echo "Build skipped due to [ci skip] commit."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
+
         stage('Prepare Workspace') {
             steps {
-                
                 sh 'git checkout main'
-               
-                sh 'git fetch origin' 
-                
-               
-                sh 'git reset --hard origin/main' 
-                
-               
+                sh 'git fetch origin'
+                sh 'git reset --hard origin/main'
                 sh 'git clean -fd'
             }
         }
 
-
         stage('Version Bump') {
             steps {
                 script {
+                    // This will bump version and commit [ci skip]
                     buildVersion('server')
                 }
             }
@@ -45,14 +62,14 @@ pipeline {
                 }
             }
         }
-        stage('Docker Login') {
-           steps {
-                  withCredentials([usernamePassword(credentialsId: 'dockerhub-jenkins', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                  sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-               }
-            }
-       }
 
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-jenkins', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
 
         stage('Backend - Docker Push') {
             steps {
@@ -78,7 +95,6 @@ pipeline {
             }
         }
 
-       
         stage('Deploy to Staging') {
             steps {
                 script {
@@ -87,7 +103,6 @@ pipeline {
             }
         }
 
-       
         stage('Approval for Production') {
             steps {
                 timeout(time: 2, unit: 'HOURS') {
@@ -96,7 +111,6 @@ pipeline {
             }
         }
 
-        
         stage('Deploy to Production') {
             steps {
                 script {
