@@ -3,14 +3,14 @@ pipeline {
     agent any
 
     environment {
-        // *** MODIFIED HERE ***
+        
         BACKEND_IMG = "anushsingla/asha-saathi:backend"
         
-        // We now define separate image tags and API URLs for each environment
+        
         FRONTEND_STAGING_IMG = "anushsingla/asha-saathi:frontend-staging"
         FRONTEND_PROD_IMG = "anushsingla/asha-saathi:frontend-production"
         
-        // NOTE: If your server has a public IP, replace 'localhost' with that IP.
+        
         STAGING_API_URL = "http://localhost:8001"
         PRODUCTION_API_URL = "http://localhost:8000"
     }
@@ -45,14 +45,7 @@ pipeline {
             }
         }
 
-        stage('Prepare Workspace') {
-            steps {
-                sh 'git checkout main'
-                sh 'git fetch origin'
-                sh 'git reset --hard origin/main'
-                sh 'git clean -fd'
-            }
-        }
+        
 
         stage('Version Bump') {
             steps {
@@ -86,12 +79,12 @@ pipeline {
             }
         }
 
-        // --- STAGES MODIFIED ---
+       
 
         stage('Frontend - Build Staging') {
             steps {
                 script {
-                    // Build the STAGING frontend image, passing the STAGING API URL
+                   
                     sh "docker buildx build --platform linux/amd64 --build-arg VITE_BACKEND_URL=${STAGING_API_URL} -t ${FRONTEND_STAGING_IMG} client"
                 }
             }
@@ -100,7 +93,7 @@ pipeline {
         stage('Frontend - Push Staging') {
             steps {
                 script {
-                    // Push the STAGING frontend image
+                    
                     sh "docker push ${FRONTEND_STAGING_IMG}"
                 }
             }
@@ -114,7 +107,7 @@ pipeline {
                     string(credentialsId: 'GROQ_KEY_CRED', variable: 'GROQ_KEY')
                 ]) {
                     script {
-                        // Deploy the staging backend (unchanged)
+                        
                         deployDocker("${BACKEND_IMG}", "asha-backend-staging", "8001:8000", [
                             env: [
                                 "MONGO_URL=${MONGO_URL}",
@@ -123,9 +116,7 @@ pipeline {
                             ]
                         ])
                         
-                        // *** ADDED HERE ***
-                        // Deploy the STAGING frontend to port 3001
-                        // You can now access your staging app at http://localhost:3001
+                        
                         deployDocker("${FRONTEND_STAGING_IMG}", "asha-frontend-staging", "3001:80")
                     }
                 }
@@ -140,12 +131,12 @@ pipeline {
             }
         }
 
-        // --- NEW STAGES ADDED ---
+        
 
         stage('Frontend - Build Production') {
             steps {
                 script {
-                    // Build the PRODUCTION frontend image, passing the PRODUCTION API URL
+                    
                     sh "docker buildx build --platform linux/amd64 --build-arg VITE_BACKEND_URL=${PRODUCTION_API_URL} -t ${FRONTEND_PROD_IMG} client"
                 }
             }
@@ -154,7 +145,7 @@ pipeline {
         stage('Frontend - Push Production') {
             steps {
                 script {
-                    // Push the PRODUCTION frontend image
+                    
                     sh "docker push ${FRONTEND_PROD_IMG}"
                 }
             }
@@ -168,7 +159,7 @@ pipeline {
                     string(credentialsId: 'GROQ_KEY_CRED', variable: 'GROQ_KEY')
                 ]) {
                     script {
-                        // Deploy the production backend (unchanged)
+                        
                         deployDocker("${BACKEND_IMG}", "asha-backend", "8000:8000", [
                             env: [
                                 "MONGO_URL=${MONGO_URL}",
@@ -177,8 +168,7 @@ pipeline {
                             ]
                         ])
                         
-                        // *** MODIFIED HERE ***
-                        // Deploy the PRODUCTION frontend to port 3000
+                        
                         deployDocker("${FRONTEND_PROD_IMG}", "asha-frontend", "3000:80")
                     }
                 }
