@@ -49,7 +49,6 @@ pipeline {
         stage('Version Bump') {
             steps {
                 script {
-                    // This will bump version and commit [ci skip]
                     buildVersion('server')
                 }
             }
@@ -58,7 +57,7 @@ pipeline {
         stage('Backend - Docker Build') {
             steps {
                 script {
-                    buildDocker("${BACKEND_IMG}", "server")
+                    sh "docker buildx build --platform linux/amd64 -t ${BACKEND_IMG} server"
                 }
             }
         }
@@ -71,56 +70,44 @@ pipeline {
             }
         }
 
-       stage('Backend - Docker Push') {
-           steps {
-              script {
-                 try {
-                   sh "docker push ${BACKEND_IMG}"
-                   } catch (err) {
-                    echo "Warning: Docker push returned an error, ignoring it to continue pipeline."
-                   }
-               }
-           }
-       }
-
-        stage('Frontend - Docker Build') {
+        stage('Backend - Docker Push') {
             steps {
                 script {
-                    buildDocker("${FRONTEND_IMG}", "client")
+                    sh "docker push ${BACKEND_IMG}"
                 }
             }
         }
 
-         stage('Frontend - Docker Push') {
+        stage('Frontend - Docker Build') {
             steps {
-              script {
-                try {
-                sh "docker push ${FRONTEND_IMG}"
-                } catch (err) {
-                  echo "Warning: Docker push returned an error, ignoring it to continue pipeline."
+                script {
+                    sh "docker buildx build --platform linux/amd64 -t ${FRONTEND_IMG} client"
                 }
             }
-       }
-   }
+        }
+
+        stage('Frontend - Docker Push') {
+            steps {
+                script {
+                    sh "docker push ${FRONTEND_IMG}"
+                }
+            }
+        }
 
         stage('Deploy to Staging') {
             steps {
-                // *** FIX APPLIED HERE ***
-                // We load all the secret credentials into variables
                 withCredentials([
                     string(credentialsId: 'MONGO_URL_CRED', variable: 'MONGO_URL'),
                     string(credentialsId: 'JWT_SECRET_CRED', variable: 'JWT_SECRET'),
                     string(credentialsId: 'GROQ_KEY_CRED', variable: 'GROQ_KEY')
                 ]) {
                     script {
-                        // Now we use the new variables (e.g., $OPENAI_KEY)
-                        deployDocker("${BACKEND_IMG}", "asha-backend-staging", "8001:8000",[
-                        env: [
-                        "MONGO_URL=${MONGO_URL}",
-                        "JWT_SECRET=${JWT_SECRET}",
-                        "GROQ_KEY=${GROQ_KEY}"
-                        ]
-
+                        deployDocker("${BACKEND_IMG}", "asha-backend-staging", "8001:8000", [
+                            env: [
+                                "MONGO_URL=${MONGO_URL}",
+                                "JWT_SECRET=${JWT_SECRET}",
+                                "GROQ_KEY=${GROQ_KEY}"
+                            ]
                         ])
                     }
                 }
@@ -137,20 +124,18 @@ pipeline {
 
         stage('Deploy to Production') {
             steps {
-                
                 withCredentials([
                     string(credentialsId: 'MONGO_URL_CRED', variable: 'MONGO_URL'),
                     string(credentialsId: 'JWT_SECRET_CRED', variable: 'JWT_SECRET'),
                     string(credentialsId: 'GROQ_KEY_CRED', variable: 'GROQ_KEY')
                 ]) {
                     script {
-                        // Use the new variables
-                        deployDocker("${BACKEND_IMG}", "asha-backend", "8000:8000",[ 
-                        env: [
-                        "MONGO_URL=${MONGO_URL}",
-                        "JWT_SECRET=${JWT_SECRET}",
-                        "GROQ_KEY=${GROQ_KEY}"
-                        ]
+                        deployDocker("${BACKEND_IMG}", "asha-backend", "8000:8000", [
+                            env: [
+                                "MONGO_URL=${MONGO_URL}",
+                                "JWT_SECRET=${JWT_SECRET}",
+                                "GROQ_KEY=${GROQ_KEY}"
+                            ]
                         ])
                         deployDocker("${FRONTEND_IMG}", "asha-frontend", "3000:80")
                     }
@@ -162,6 +147,9 @@ pipeline {
     post {
         success {
             echo "Deployment pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check logs for details."
         }
     }
 }
