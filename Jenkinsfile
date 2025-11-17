@@ -55,7 +55,7 @@ pipeline {
             }
         }
 
-        stage('Backend - Docker Build') {
+        stage('Backend - Docker Build done') {
             steps {
                 script {
                     sh "docker buildx build --platform linux/amd64 -t ${BACKEND_IMG} server"
