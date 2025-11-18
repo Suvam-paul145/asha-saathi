@@ -47,7 +47,7 @@ pipeline {
 
         
 
-        stage('Version Bump') {
+        stage('Version Bump done') {
             steps {
                 script {
                     buildVersion('server')
