@@ -64,67 +64,63 @@ Copy code
 ```bash
 git clone https://github.com/YOUR-USERNAME/asha-saathi.git
 cd asha-saathi
+
 🖥️ Backend Setup
-bash
-Copy code
+
+
 cd backend
 npm install
 npm run dev
+
 🌐 Frontend Setup
-bash
-Copy code
+
+
 cd frontend
 npm install
 npm run dev
-➡️ App Runs On
-Frontend → http://localhost:5173
 
-Backend → http://localhost:5000
+➡️ App Runs On
+
+Link -> https://asha-delta.vercel.app/
+
 
 🔹 METHOD 2 — Run Using Docker Hub (No Setup Needed)
+
 🐳 Pull Frontend Image
-bash
-Copy code
+
 docker pull anushsingla/asha-saathi:frontend
+
 Run Frontend
-bash
-Copy code
+
 docker run -d -p 80:80 --name asha-frontend anushsingla/asha-saathi:frontend
 🐳 Pull Backend Image
-bash
-Copy code
-docker pull anushsingla/asha-saathi:backend
-Run Backend
-bash
-Copy code
-docker run -d -p 5000:5000 --name asha-backend anushsingla/asha-saathi:backend
-🎯 App is Live At
-Frontend: http://localhost
 
-Backend: http://localhost:5000
+
+docker pull anushsingla/asha-saathi:backend
+
+Run Backend
+
+docker run -d -p 5000:5000 --name asha-backend anushsingla/asha-saathi:backend
+
+🎯 App is Live At 
+
+Frontend: Frontend-Staging-image
+
+Backend: http://localhost:8000
 
 🔗 CI/CD Pipeline (Jenkins)
+
 ✔ Auto-build Node.js + React
 ✔ Automated version bumping
 ✔ Docker build & push to Docker Hub
 ✔ SSH deploy to server
 ✔ GitHub Webhook triggers
 
-<p align="center"> <img src="https://skillicons.dev/icons?i=jenkins,docker,git" /> </p>
-📸 Screenshots
-(Add your images inside /screenshots folder)
 
-markdown
-Copy code
-/screenshots
-  - home.png
-  - ocr.png
-  - ai-summary.png
-  - voice-output.png
 ⭐ Support
 ⭐ Star this repo
 🍴 Fork it
 🐛 Open issues
 🚀 Contribute
 
-<p align="center"> Made with ❤️ for ASHA Workers </p> ```
+ ```
