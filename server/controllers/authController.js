@@ -9,6 +9,17 @@ exports.register = async (req, res) => {
 
     const { username, email, password } = req.body;
 
+    // Server-side strong password validation
+    const passwordErrors = [];
+    if (!password || password.length < 8) passwordErrors.push("at least 8 characters");
+    if (!/[A-Z]/.test(password)) passwordErrors.push("one uppercase letter");
+    if (!/[a-z]/.test(password)) passwordErrors.push("one lowercase letter");
+    if (!/[0-9]/.test(password)) passwordErrors.push("one number");
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) passwordErrors.push("one special character");
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({ message: `Password must contain: ${passwordErrors.join(", ")}` });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log("User already exists");

@@ -1,15 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const passwordRules = [
+  { label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+  { label: "One uppercase letter", test: (pw) => /[A-Z]/.test(pw) },
+  { label: "One lowercase letter", test: (pw) => /[a-z]/.test(pw) },
+  { label: "One number", test: (pw) => /[0-9]/.test(pw) },
+  { label: "One special character (!@#$%^&*)", test: (pw) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw) },
+];
+
 const AdminRegister = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const isPasswordStrong = passwordRules.every((rule) => rule.test(password));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isPasswordStrong) {
+      setPasswordTouched(true);
+      return;
+    }
     try{
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, {
       method: "POST",
@@ -127,7 +142,7 @@ const AdminRegister = () => {
                   type="password"
                   placeholder="Create a password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setPasswordTouched(true); }}
                   className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl 
                            text-gray-800 placeholder-gray-400 
                            focus:border-[#67C6E3] focus:bg-white focus:outline-none 
@@ -138,9 +153,17 @@ const AdminRegister = () => {
                 />
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#67C6E3]/0 via-[#67C6E3]/10 to-[#67C6E3]/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </div>
+              {passwordTouched && (
+                <ul className="mt-2 ml-1 space-y-1">
+                  {passwordRules.map((rule, i) => (
+                    <li key={i} aria-label={`${rule.label}: ${rule.test(password) ? "requirement met" : "requirement not met"}`} className={`text-xs flex items-center gap-1.5 ${rule.test(password) ? "text-green-600" : "text-red-500"}`}>
+                      <span aria-hidden="true">{rule.test(password) ? "✓" : "✗"}</span>
+                      {rule.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-
-            
 
             
             
