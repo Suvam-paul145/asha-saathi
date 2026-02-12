@@ -156,8 +156,8 @@ const Register = () => {
               {passwordTouched && (
                 <ul className="mt-2 ml-1 space-y-1">
                   {passwordRules.map((rule, i) => (
-                    <li key={i} className={`text-xs flex items-center gap-1.5 ${rule.test(password) ? "text-green-600" : "text-red-500"}`}>
-                      <span>{rule.test(password) ? "✓" : "✗"}</span>
+                    <li key={i} aria-label={`${rule.label}: ${rule.test(password) ? "requirement met" : "requirement not met"}`} className={`text-xs flex items-center gap-1.5 ${rule.test(password) ? "text-green-600" : "text-red-500"}`}>
+                      <span aria-hidden="true">{rule.test(password) ? "✓" : "✗"}</span>
                       {rule.label}
                     </li>
                   ))}
